@@ -149,6 +149,15 @@
     });
     saveBtn.addEventListener("click", () => {
       const mappings = [];
+      const apiHeadersText = document.getElementById("apiHeaders").value;
+      if (apiHeadersText && apiHeadersText.trim()) {
+        try {
+          JSON.parse(apiHeadersText);
+        } catch (e) {
+          alert("apiHeaders is not valid JSON: " + (e?.message || String(e)));
+          return;
+        }
+      }
       document.querySelectorAll("#mappings > div").forEach((d) => {
         const fieldA = d.querySelector(".fieldA").value;
         const selectorA = d.querySelector(".selectorA").value;
