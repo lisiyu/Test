@@ -119,10 +119,15 @@
       tip.style.display = "block";
       const copyBtn = tip.querySelector("#ce-copy");
       if (copyBtn) {
-        copyBtn.onclick = (ev) => {
+        copyBtn.onclick = async (ev) => {
           ev.stopPropagation();
           try {
-            navigator.clipboard.writeText(sels.best);
+            await navigator.clipboard.writeText(sels.best);
+            const prev = copyBtn.textContent;
+            copyBtn.textContent = "Copied";
+            setTimeout(() => {
+              copyBtn.textContent = prev;
+            }, 1200);
           } catch (e) {
             console.warn("copy failed", e);
           }

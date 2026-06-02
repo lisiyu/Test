@@ -149,12 +149,16 @@
     });
     saveBtn.addEventListener("click", () => {
       const mappings = [];
-      const apiHeadersText = document.getElementById("apiHeaders").value;
+      const apiHeadersEl = document.getElementById("apiHeaders");
+      const apiHeadersError = document.getElementById("apiHeadersError");
+      apiHeadersError.style.display = "none";
+      const apiHeadersText = apiHeadersEl.value;
       if (apiHeadersText && apiHeadersText.trim()) {
         try {
           JSON.parse(apiHeadersText);
         } catch (e) {
-          alert("apiHeaders is not valid JSON: " + (e?.message || String(e)));
+          apiHeadersError.textContent = "apiHeaders is not valid JSON: " + (e?.message || String(e));
+          apiHeadersError.style.display = "block";
           return;
         }
       }
