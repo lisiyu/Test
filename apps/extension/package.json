@@ -1,0 +1,11 @@
+{
+  "name": "test-extension",
+  "version": "0.1.0-beta",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.18.0"
+  }
+}

@@ -1,17 +1,20 @@
 import { extract } from './extractor';
+import { enableVisualSelector } from './selector';
 
 console.log('content script initialized');
+
+chrome.storage.local.get(['config'], (res) => {
+  const config = res.config || {};
+  tryAutoLogin(config);
+});
 
 // respond to messages from background
 chrome.runtime?.onMessage?.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'captureForSend') {
-    // perform extraction according to configured mappings
     const data = extract(msg.info);
-    // save to storage as lastExtract
     chrome.storage.local.set({ lastExtract: data }, () => {
       sendResponse({ ok: true });
     });
-    // indicate async response
     return true;
   }
 
@@ -19,8 +22,15 @@ chrome.runtime?.onMessage?.addListener((msg, _sender, sendResponse) => {
     chrome.storage.local.get(['lastExtract', 'config'], (res) => {
       const last = res.lastExtract || {};
       const config = res.config || {};
-      // attempt to fill fields on this page using config mappings
       tryFillFromData(last, config);
+    });
+  }
+
+  if (msg?.type === 'startVisualSelect') {
+    const role = msg.role || 'A';
+    const disable = enableVisualSelector((selector) => {
+      chrome.runtime.sendMessage({ type: 'visualSelectorResult', selector, role });
+      if (disable) disable();
     });
   }
 });
@@ -39,6 +49,54 @@ function tryFillFromData(data: any, config: any) {
       }
     } catch (e) {
       // ignore
+    }
+  }
+}
+
+function tryAutoLogin(config: any) {
+  if (!config) return;
+  const href = location.href;
+  if (config.pageALoginUrl && config.autoLoginA && href.includes(config.pageALoginUrl)) {
+    doAutoLogin(config, 'A');
+  }
+  if (config.pageBLoginUrl && config.autoLoginB && href.includes(config.pageBLoginUrl)) {
+    doAutoLogin(config, 'B');
+  }
+}
+
+function doAutoLogin(config: any, role: 'A' | 'B') {
+  const loginConfig = role === 'A' ? config.pageALogin || {} : config.pageBLogin || {};
+  if (!loginConfig) return;
+
+  if (config.credentialType === 'certificate') {
+    if (loginConfig.certificateSelector && config.certificate) {
+      const certEl = document.querySelector(loginConfig.certificateSelector) as HTMLInputElement;
+      if (certEl) {
+        certEl.value = config.certificate;
+        certEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  } else {
+    if (loginConfig.usernameSelector && config.username) {
+      const userEl = document.querySelector(loginConfig.usernameSelector) as HTMLInputElement;
+      if (userEl) {
+        userEl.value = config.username;
+        userEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    if (loginConfig.passwordSelector && config.password) {
+      const passEl = document.querySelector(loginConfig.passwordSelector) as HTMLInputElement;
+      if (passEl) {
+        passEl.value = config.password;
+        passEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
+  if (loginConfig.submitSelector) {
+    const submitEl = document.querySelector(loginConfig.submitSelector) as HTMLElement;
+    if (submitEl) {
+      submitEl.click();
     }
   }
 }
