@@ -153,6 +153,11 @@ chrome.storage.local.get(['config', 'lastApiResult', 'lastApiError'], (res) => {
 
   saveBtn.addEventListener('click', () => {
     const mappings: any[] = [];
+    // validate apiHeaders JSON early
+    const apiHeadersText = (document.getElementById('apiHeaders') as HTMLTextAreaElement).value;
+    if (apiHeadersText && apiHeadersText.trim()) {
+      try { JSON.parse(apiHeadersText); } catch (e: any) { alert('apiHeaders is not valid JSON: ' + (e?.message || String(e))); return; }
+    }
     document.querySelectorAll('#mappings > div').forEach((d) => {
       const fieldA = (d.querySelector('.fieldA') as HTMLInputElement).value;
       const selectorA = (d.querySelector('.selectorA') as HTMLInputElement).value;

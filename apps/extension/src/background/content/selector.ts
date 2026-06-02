@@ -116,8 +116,33 @@ export function enableVisualSelector(callback: (selector: string) => void) {
     overlay.style.height = `${Math.max(0, r.height)}px`;
 
     const sels = computeSelectors(target);
-    tip.textContent = sels.best + (sels.all.length > 1 ? '\n\nAlternatives:\n' + sels.all.slice(1).join('\n') : '');
+    // build interactive tip: copy button + best selector + alternatives clickable
+    let html = `<div style="display:flex;gap:8px;align-items:center;"><button id=ce-copy style="padding:4px 6px;border-radius:4px;">Copy</button><div style="font-weight:600;">Best:</div><div id=ce-best style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;">${sels.best}</div></div>`;
+    if (sels.all.length > 1) {
+      html += '<div style="margin-top:6px;font-weight:600">Alternatives:</div>';
+      html += '<div style="margin-top:4px">' + sels.all.map((s,i) => `<div class="ce-alt" data-idx="${i}" style="cursor:pointer;padding:2px 0;color:#9cf">${s}</div>`).join('') + '</div>';
+    }
+    tip.innerHTML = html;
     tip.style.display = 'block';
+
+    // attach click handlers for copy and alternatives
+    const copyBtn = tip.querySelector('#ce-copy') as HTMLElement | null;
+    if (copyBtn) {
+      copyBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        try { navigator.clipboard.writeText(sels.best); } catch (e) { console.warn('copy failed', e); }
+      };
+    }
+    tip.querySelectorAll('.ce-alt').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const idx = Number((ev.currentTarget as HTMLElement).getAttribute('data-idx')) || 0;
+        const chosen = sels.all[idx] || sels.best;
+        // accept choice
+        callback(chosen);
+        disable();
+      });
+    });
 
     // position tip near cursor if available, otherwise above element
     if (typeof clientX === 'number' && typeof clientY === 'number') {
