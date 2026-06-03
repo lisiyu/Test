@@ -1,6 +1,6 @@
 {
   "name": "test-extension",
-  "version": "0.1.0-beta",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "node build.js"

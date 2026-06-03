@@ -128,9 +128,14 @@ export function enableVisualSelector(callback: (selector: string) => void) {
     // attach click handlers for copy and alternatives
     const copyBtn = tip.querySelector('#ce-copy') as HTMLElement | null;
     if (copyBtn) {
-      copyBtn.onclick = (ev) => {
+      copyBtn.onclick = async (ev) => {
         ev.stopPropagation();
-        try { navigator.clipboard.writeText(sels.best); } catch (e) { console.warn('copy failed', e); }
+        try {
+          await navigator.clipboard.writeText(sels.best);
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied';
+          setTimeout(() => { copyBtn.textContent = prev; }, 1200);
+        } catch (e) { console.warn('copy failed', e); }
       };
     }
     tip.querySelectorAll('.ce-alt').forEach((el) => {

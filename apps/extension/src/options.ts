@@ -146,6 +146,17 @@ chrome.storage.local.get(['config', 'lastApiResult', 'lastApiError'], (res) => {
     chrome.storage.local.get(['config'], (res) => {
       const config = res.config || { mappings: [] };
       config.mappings = config.mappings || [];
+      // 先收集当前DOM中所有mappings的最新值
+      const mappings: any[] = [];
+      document.querySelectorAll('#mappings > div').forEach((d) => {
+        const fieldA = (d.querySelector('.fieldA') as HTMLInputElement).value;
+        const selectorA = (d.querySelector('.selectorA') as HTMLInputElement).value;
+        const selectorB = (d.querySelector('.selectorB') as HTMLInputElement).value;
+        const apiField = (d.querySelector('.apiField') as HTMLInputElement).value;
+        mappings.push({ fieldA, selectorA, selectorB, apiField });
+      });
+      // 将收集到的mappings更新到config，然后添加新项
+      config.mappings = mappings;
       config.mappings.push({ fieldA: '', selectorA: '', selectorB: '', apiField: '' });
       chrome.storage.local.set({ config }, () => renderMappings(config.mappings));
     });
@@ -153,10 +164,13 @@ chrome.storage.local.get(['config', 'lastApiResult', 'lastApiError'], (res) => {
 
   saveBtn.addEventListener('click', () => {
     const mappings: any[] = [];
-    // validate apiHeaders JSON early
-    const apiHeadersText = (document.getElementById('apiHeaders') as HTMLTextAreaElement).value;
+    // validate apiHeaders JSON early and show inline error
+    const apiHeadersEl = document.getElementById('apiHeaders') as HTMLTextAreaElement;
+    const apiHeadersError = document.getElementById('apiHeadersError') as HTMLElement;
+    apiHeadersError.style.display = 'none';
+    const apiHeadersText = apiHeadersEl.value;
     if (apiHeadersText && apiHeadersText.trim()) {
-      try { JSON.parse(apiHeadersText); } catch (e: any) { alert('apiHeaders is not valid JSON: ' + (e?.message || String(e))); return; }
+      try { JSON.parse(apiHeadersText); } catch (e: any) { apiHeadersError.textContent = 'apiHeaders is not valid JSON: ' + (e?.message || String(e)); apiHeadersError.style.display = 'block'; return; }
     }
     document.querySelectorAll('#mappings > div').forEach((d) => {
       const fieldA = (d.querySelector('.fieldA') as HTMLInputElement).value;

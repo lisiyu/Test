@@ -143,18 +143,31 @@
       chrome.storage.local.get(["config"], (res) => {
         const config = res.config || { mappings: [] };
         config.mappings = config.mappings || [];
+        const mappings = [];
+        document.querySelectorAll("#mappings > div").forEach((d) => {
+          const fieldA = d.querySelector(".fieldA").value;
+          const selectorA = d.querySelector(".selectorA").value;
+          const selectorB = d.querySelector(".selectorB").value;
+          const apiField = d.querySelector(".apiField").value;
+          mappings.push({ fieldA, selectorA, selectorB, apiField });
+        });
+        config.mappings = mappings;
         config.mappings.push({ fieldA: "", selectorA: "", selectorB: "", apiField: "" });
         chrome.storage.local.set({ config }, () => renderMappings(config.mappings));
       });
     });
     saveBtn.addEventListener("click", () => {
       const mappings = [];
-      const apiHeadersText = document.getElementById("apiHeaders").value;
+      const apiHeadersEl = document.getElementById("apiHeaders");
+      const apiHeadersError = document.getElementById("apiHeadersError");
+      apiHeadersError.style.display = "none";
+      const apiHeadersText = apiHeadersEl.value;
       if (apiHeadersText && apiHeadersText.trim()) {
         try {
           JSON.parse(apiHeadersText);
         } catch (e) {
-          alert("apiHeaders is not valid JSON: " + (e?.message || String(e)));
+          apiHeadersError.textContent = "apiHeaders is not valid JSON: " + (e?.message || String(e));
+          apiHeadersError.style.display = "block";
           return;
         }
       }
