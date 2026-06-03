@@ -143,6 +143,15 @@
       chrome.storage.local.get(["config"], (res) => {
         const config = res.config || { mappings: [] };
         config.mappings = config.mappings || [];
+        const mappings = [];
+        document.querySelectorAll("#mappings > div").forEach((d) => {
+          const fieldA = d.querySelector(".fieldA").value;
+          const selectorA = d.querySelector(".selectorA").value;
+          const selectorB = d.querySelector(".selectorB").value;
+          const apiField = d.querySelector(".apiField").value;
+          mappings.push({ fieldA, selectorA, selectorB, apiField });
+        });
+        config.mappings = mappings;
         config.mappings.push({ fieldA: "", selectorA: "", selectorB: "", apiField: "" });
         chrome.storage.local.set({ config }, () => renderMappings(config.mappings));
       });

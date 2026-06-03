@@ -146,6 +146,17 @@ chrome.storage.local.get(['config', 'lastApiResult', 'lastApiError'], (res) => {
     chrome.storage.local.get(['config'], (res) => {
       const config = res.config || { mappings: [] };
       config.mappings = config.mappings || [];
+      // 先收集当前DOM中所有mappings的最新值
+      const mappings: any[] = [];
+      document.querySelectorAll('#mappings > div').forEach((d) => {
+        const fieldA = (d.querySelector('.fieldA') as HTMLInputElement).value;
+        const selectorA = (d.querySelector('.selectorA') as HTMLInputElement).value;
+        const selectorB = (d.querySelector('.selectorB') as HTMLInputElement).value;
+        const apiField = (d.querySelector('.apiField') as HTMLInputElement).value;
+        mappings.push({ fieldA, selectorA, selectorB, apiField });
+      });
+      // 将收集到的mappings更新到config，然后添加新项
+      config.mappings = mappings;
       config.mappings.push({ fieldA: '', selectorA: '', selectorB: '', apiField: '' });
       chrome.storage.local.set({ config }, () => renderMappings(config.mappings));
     });
